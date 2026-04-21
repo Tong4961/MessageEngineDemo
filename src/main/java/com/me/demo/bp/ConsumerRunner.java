@@ -15,10 +15,16 @@ import org.springframework.stereotype.Component;
 public class ConsumerRunner implements CommandLineRunner {
     @Autowired
     private AllTopicConsumer consumerService;
+    @Autowired
+    private ReplyConsumer replyConsumer;
+    @Autowired
+    private DemoBusinessConsumer demoBusinessConsumer;
 
     @Override
     public void run(String... args) throws Exception {
         System.out.println("SpringBoot启动完毕 Create Consumer...");
         consumerService.initPushConsumer("JH0001,JH0002,JH0003");
+        replyConsumer.init();
+        demoBusinessConsumer.init("JH0001,JH0002,JH0003");
     }
 }

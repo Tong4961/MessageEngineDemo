@@ -1,8 +1,6 @@
 package com.me.demo.bp;
 
 import com.me.demo.common.RequestCommon;
-import com.me.demo.common.ResponseResult;
-import com.me.demo.common.RpcSyncContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
@@ -69,12 +67,8 @@ public class AllTopicConsumer implements DisposableBean {
                             //业务处理
                             System.out.println("收到消息: Topic=" + messageView.getTopic() + ", MessageId=" + messageView.getMessageId()+ ", MessageBody=" + requestCommon);
 
-                            //RPC同步回调：处理完成后返回结果给生产者
-                            String requestId = requestCommon.getRequestId();
-                            if (requestId != null) {
-                                ResponseResult response = ResponseResult.success("处理完成1, messageId=" + messageView.getMessageId());
-                                RpcSyncContext.onResponse(requestId, response);
-                            }
+                            //注意：RPC同步回调已改为MQ reply方式（ReplyConsumer）
+                            //消费者项目处理完消息后，请发送 reply 到 reply topic
 //                            Thread.sleep(10000);
                             //同步异步消息返回
                             return ConsumeResult.SUCCESS; // 返回消费成功
