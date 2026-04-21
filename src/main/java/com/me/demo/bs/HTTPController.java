@@ -27,6 +27,7 @@ import tools.jackson.databind.ObjectMapper;
 public class HTTPController {
     @Autowired
     private RocketMQClientTemplate rocketMQClientTemplate;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     /**
     *@author Ming
     *@Description POST同步 直接返回BP处理后的消息
@@ -72,23 +73,17 @@ public class HTTPController {
             RequestCommon requestCommon = RequestUtil.extractRequestCommon(request);
             requestCommon.setRequestType("http");
             requestCommon.setRequestTopic(topic);
-
             //创建RPC同步上下文，注册future用于接收消费者回调
             String requestId = requestCommon.getRequestId();
             CompletableFuture<ResponseResult> responseFuture = RpcSyncContext.createRequest(requestId);
-
-            //发送消息
             SendReceipt sendReceipt = rocketMQClientTemplate.syncSendNormalMessage(topic, requestCommon);
             log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
-
             //等待消费者返回结果（RPC同步调用）
             ResponseResult response = RpcSyncContext.getResponse(requestId);
-            log.info("收到消费者响应, requestId={}, code={}, message={}", requestId, response.getCode(), response.getMessage());
-
-            return new ObjectMapper().writeValueAsString(response);
+            return OBJECT_MAPPER.writeValueAsString(response.getData());
         } catch (Exception e) {
             log.error("syncMethod error: {}", e.getMessage());
-            return new ObjectMapper().writeValueAsString(ResponseResult.error(e.getMessage()));
+            return ResponseResult.error(e.getMessage()).toString();
         }
     }
 
@@ -106,13 +101,9 @@ public class HTTPController {
                 }
             });
         } catch (Exception e) {
-            log.error("getasync error: {}", e.getMessage());
-            return """
-                    {"code": 500,"data": "Message received. Error. %s"}
-                    """.formatted(e.getMessage());
+            log.error("asyncMethod error: {}", e.getMessage());
+            return ResponseResult.error(e.getMessage()).toString();
         }
-        return """
-                {"code": 200,"data": "Message received. Success."}
-                """;
+        return ResponseResult.success("").toString();
     }
 }

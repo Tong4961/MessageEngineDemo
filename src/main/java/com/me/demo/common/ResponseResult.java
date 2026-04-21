@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * RPC响应对象
@@ -34,5 +35,16 @@ public class ResponseResult {
                 .message(message)
                 .timestamp(System.currentTimeMillis())
                 .build();
+    }
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(); //全局静态ObjectMapper 只创建一次性能好
+
+    @Override
+    public String toString() {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(this);
+        } catch (Exception e) {
+            return "RequestCommon toString error：" + e.getMessage();
+        }
     }
 }

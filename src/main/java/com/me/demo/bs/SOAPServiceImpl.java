@@ -2,15 +2,20 @@ package com.me.demo.bs;
 
 import com.me.demo.common.RequestCommon;
 import com.me.demo.common.RequestUtil;
+import com.me.demo.common.ResponseResult;
+import com.me.demo.common.RpcSyncContext;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.ws.WebServiceContext;
 import jakarta.xml.ws.handler.MessageContext;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.core.RocketMQClientTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -20,12 +25,14 @@ import java.util.concurrent.CompletableFuture;
  * @Date 2026/4/20 10:37
  * @Version 1.0
  */
+@Slf4j
 @Service
 public class SOAPServiceImpl implements SOAPService {
     @Resource
     private WebServiceContext wsContext;
     @Autowired
     private RocketMQClientTemplate rocketMQClientTemplate;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
     public String syncWithTopic(String topic, String msg) {
@@ -34,14 +41,16 @@ public class SOAPServiceImpl implements SOAPService {
             RequestCommon requestCommon = RequestUtil.extractRequestCommon(request, msg);
             requestCommon.setRequestType("soap");
             requestCommon.setRequestTopic(topic);
+            String requestId = requestCommon.getRequestId();
+            CompletableFuture<ResponseResult> responseFuture = RpcSyncContext.createRequest(requestId);
             SendReceipt sendReceipt = rocketMQClientTemplate.syncSendNormalMessage(topic, requestCommon);
-            return """
-                {"code": 200,"data": "Message received. Success."}
-                """;
+            log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
+            //等待消费者返回结果（RPC同步调用）
+            ResponseResult response = RpcSyncContext.getResponse(requestId);
+            return OBJECT_MAPPER.writeValueAsString(response.getData());
         } catch (Exception e) {
-            return """
-                    {"code": 500,"data": "Message received. Error. %s"}
-                    """.formatted(e.getMessage());
+            log.error("syncMethod error: {}", e.getMessage());
+            return ResponseResult.error(e.getMessage()).toString();
         }
     }
 
@@ -61,13 +70,10 @@ public class SOAPServiceImpl implements SOAPService {
                 }
             });
         } catch (Exception e) {
-            return """
-                    {"code": 500,"data": "Message received. Error. %s"}
-                    """.formatted(e.getMessage());
+            log.error("asyncMethod error: {}", e.getMessage());
+            return ResponseResult.error(e.getMessage()).toString();
         }
-        return """
-                {"code": 200,"data": "Message received. Success."}
-                """;
+        return ResponseResult.success("").toString();
     }
 
     @Override
@@ -75,11 +81,8 @@ public class SOAPServiceImpl implements SOAPService {
         HttpServletRequest request = (HttpServletRequest) wsContext.getMessageContext().get(MessageContext.SERVLET_REQUEST);
         String topic = request.getParameter("topic");
         if (StringUtils.isEmpty(topic)) {
-            return """
-                {"code": 400,"data": "Message received. No Topic."}
-                """;
+            return ResponseResult.error("No Topic").toString();
         }
-        System.out.println("topic:"+topic);
         return syncWithTopic(topic,msg);
     }
 
@@ -88,11 +91,8 @@ public class SOAPServiceImpl implements SOAPService {
         HttpServletRequest request = (HttpServletRequest) wsContext.getMessageContext().get(MessageContext.SERVLET_REQUEST);
         String topic = request.getParameter("topic");
         if (StringUtils.isEmpty(topic)) {
-            return """
-                {"code": 400,"data": "Message received. No Topic."}
-                """;
+            return ResponseResult.error("No Topic").toString();
         }
-        System.out.println("topic:"+topic);
         return asyncWithTopic(topic,msg);
     }
 }

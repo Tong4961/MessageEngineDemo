@@ -30,7 +30,7 @@ public class RequestCommon {
     private String clientIp;
     private String createTime;
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(); //全局静态ObjectMapper 只创建一次性能好
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
     public String toString() {
