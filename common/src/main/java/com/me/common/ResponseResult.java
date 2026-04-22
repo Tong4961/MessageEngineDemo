@@ -1,8 +1,8 @@
-package com.me.bs.common;
+package com.me.common;
 
-import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
 
@@ -23,6 +23,15 @@ public class ResponseResult {
     public static ResponseResult success(Object data) {
         return ResponseResult.builder()
                 .code(200)
+                .message("success")
+                .data(data)
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
+    public static ResponseResult success(String requestId, Object data) {
+        return ResponseResult.builder()
+                .code(200)
+                .requestId(requestId)
                 .message("success")
                 .data(data)
                 .timestamp(System.currentTimeMillis())

@@ -1,6 +1,6 @@
 package com.me.bs.util;
 
-import com.me.bs.common.RequestCommon;
+import com.me.common.RequestCommon;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.util.ContentCachingRequestWrapper;

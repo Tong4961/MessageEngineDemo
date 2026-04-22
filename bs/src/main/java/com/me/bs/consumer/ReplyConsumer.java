@@ -1,7 +1,7 @@
 package com.me.bs.consumer;
 
-import com.me.bs.common.ResponseResult;
-import com.me.bs.common.RpcSyncContext;
+import com.me.common.ResponseResult;
+import com.me.bs.util.RpcSyncContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;

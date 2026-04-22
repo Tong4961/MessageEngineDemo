@@ -1,8 +1,8 @@
 package com.me.bs.soap;
 
-import com.me.bs.common.RequestCommon;
-import com.me.bs.common.ResponseResult;
-import com.me.bs.common.RpcSyncContext;
+import com.me.common.RequestCommon;
+import com.me.common.ResponseResult;
+import com.me.bs.util.RpcSyncContext;
 import com.me.bs.util.RequestUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;

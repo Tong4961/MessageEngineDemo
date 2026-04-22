@@ -1,9 +1,9 @@
 package com.me.bs.http;
 
-import com.me.bs.common.RequestCommon;
-import com.me.bs.common.ResponseResult;
-import com.me.bs.common.RpcSyncContext;
+import com.me.bs.util.RpcSyncContext;
 import com.me.bs.util.RequestUtil;
+import com.me.common.RequestCommon;
+import com.me.common.ResponseResult;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;

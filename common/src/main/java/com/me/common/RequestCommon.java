@@ -1,4 +1,4 @@
-package com.me.bs.common;
+package com.me.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

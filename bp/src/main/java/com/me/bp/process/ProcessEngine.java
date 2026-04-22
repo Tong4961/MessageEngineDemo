@@ -1,7 +1,7 @@
 package com.me.bp.process;
 
-import com.me.bp.common.RequestCommon;
-import com.me.bp.common.ResponseResult;
+import com.me.common.RequestCommon;
+import com.me.common.ResponseResult;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 

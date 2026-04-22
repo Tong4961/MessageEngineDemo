@@ -1,7 +1,7 @@
 package com.me.bp.consumer;
 
-import com.me.bp.common.RequestCommon;
-import com.me.bp.common.ResponseResult;
+import com.me.common.RequestCommon;
+import com.me.common.ResponseResult;
 import com.me.bp.process.ProcessEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
