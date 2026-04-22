@@ -20,5 +20,3 @@ rocketmq:
     endpoints: 54.145.211.227:8080
   push-consumer:
      endpoints: 54.145.211.227:8080
-  reply-consumer:
-     default-topic: meDemo_reply

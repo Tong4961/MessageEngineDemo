@@ -79,7 +79,7 @@ public class HTTPController {
             log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
             //等待消费者返回结果（RPC同步调用）
             ResponseResult response = RpcSyncContext.getResponse(requestId);
-            return OBJECT_MAPPER.writeValueAsString(response.getData());
+            return response.toString();
         } catch (Exception e) {
             log.error("syncMethod error: {}", e.getMessage());
             return ResponseResult.error(e.getMessage()).toString();

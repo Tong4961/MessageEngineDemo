@@ -18,7 +18,7 @@ public class ConsumerRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        //System.out.println("SpringBoot启动完毕 Create Consumer...");
+        System.out.println("SpringBoot启动完毕 Create Consumer...");
         //consumerService.initPushConsumer("JH0001,JH0002,JH0003");
         replyConsumer.init();
     }

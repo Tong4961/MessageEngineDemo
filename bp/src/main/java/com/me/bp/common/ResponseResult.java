@@ -28,6 +28,15 @@ public class ResponseResult {
                 .timestamp(System.currentTimeMillis())
                 .build();
     }
+    public static ResponseResult success(String requestId, Object data) {
+        return ResponseResult.builder()
+                .code(200)
+                .message("success")
+                .requestId(requestId)
+                .data(data)
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
 
     public static ResponseResult error(String message) {
         return ResponseResult.builder()

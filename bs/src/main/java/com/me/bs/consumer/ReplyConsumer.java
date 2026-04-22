@@ -25,12 +25,8 @@ import java.nio.charset.StandardCharsets;
 public class ReplyConsumer implements DisposableBean {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private PushConsumer pushConsumer;
-
     @Value("${rocketmq.push-consumer.endpoints}")
     private String proxyAddr;
-
-    @Value("${rocketmq.reply-consumer.default-topic:meDemo_reply}")
-    private String defaultReplyTopic;
 
     /**
      * 初始化 reply topic 消费者
@@ -42,35 +38,30 @@ public class ReplyConsumer implements DisposableBean {
                     .setEndpoints(this.proxyAddr)
                     .enableSsl(false)
                     .build();
-
             FilterExpression filterExpression = new FilterExpression("*", FilterExpressionType.TAG);
-
             this.pushConsumer = provider.newPushConsumerBuilder()
-                    .setConsumerGroup("meDemoReplyConsumerGroup")
+                    .setConsumerGroup("BSReplyConsumerGroup")
                     .setClientConfiguration(configuration)
-                    .setSubscriptionExpressions(java.util.Map.of(defaultReplyTopic, filterExpression))
+                    .setSubscriptionExpressions(java.util.Map.of("replyTopic", filterExpression))
                     .setMessageListener(messageView -> {
                         try {
                             String body = StandardCharsets.UTF_8.decode(messageView.getBody()).toString();
                             ResponseResult response = OBJECT_MAPPER.readValue(body, ResponseResult.class);
                             String requestId = response.getRequestId();
-                            log.info("收到回复消息: topic={}, requestId={}, code={}",
-                                    messageView.getTopic(), requestId, response.getCode());
-
+                            log.info("收到回复消息: topic={}, requestId={}, code={}", messageView.getTopic(), requestId, response.getCode());
                             if (requestId != null) {
                                 RpcSyncContext.onResponse(requestId, response);
                             }
                             return ConsumeResult.SUCCESS;
                         } catch (Exception e) {
-                            log.error("处理回复消息异常: {}", e.getMessage());
+                            log.error("BS ReplyConsumer topic={} err:{}", messageView.getTopic(), e.getMessage());
                             return ConsumeResult.FAILURE;
                         }
                     })
                     .build();
-
-            log.info("ReplyConsumer 启动成功，订阅 topic={}", defaultReplyTopic);
+            log.info("BS ReplyConsumer 启动成功");
         } catch (Exception e) {
-            log.error("ReplyConsumer 启动失败: {}", e.getMessage());
+            log.error("BS ReplyConsumer 启动失败: {}", e.getMessage());
         }
     }
 
@@ -78,7 +69,7 @@ public class ReplyConsumer implements DisposableBean {
     public void destroy() throws Exception {
         if (this.pushConsumer != null) {
             this.pushConsumer.close();
-            log.info("ReplyConsumer 已关闭");
+            log.info("BS RocketMQ ReplyConsumer 已关闭");
         }
     }
 }
