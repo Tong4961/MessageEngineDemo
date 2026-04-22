@@ -1,0 +1,24 @@
+server:
+  session-timeout: 1800
+  port: 12001
+  servlet:
+    context-path: "/bs"
+
+spring:
+  application:
+    name: bs
+  threads:
+    virtual:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+
+rocketmq:
+  producer:
+    endpoints: 54.145.211.227:8080
+  push-consumer:
+     endpoints: 54.145.211.227:8080
+  reply-consumer:
+     default-topic: meDemo_reply
