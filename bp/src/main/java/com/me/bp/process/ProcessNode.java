@@ -15,4 +15,5 @@ public class ProcessNode {
     private String nodeName;
     private String nodeType;
     private String nodeConfig;
+    private String nextNodeId;
 }

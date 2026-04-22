@@ -15,4 +15,6 @@ public class ProcessConfig {
     private String processId;
     private String processName;
     private List<ProcessNode> processNodes;
+    private String startNodeId;
+    private String endNodeId;
 }

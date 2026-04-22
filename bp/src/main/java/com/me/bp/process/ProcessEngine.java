@@ -2,7 +2,9 @@ package com.me.bp.process;
 
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
+import org.apache.cxf.common.util.CollectionUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -25,11 +27,28 @@ public class ProcessEngine {
                 throw new RuntimeException(e);
             }
         }
-        for (ProcessNode processNode : processConfig.getProcessNodes()) {
-            System.out.println(OBJECT_MAPPER.writeValueAsString(processNode));
+        ProcessNode currentProcessNode = getNodeById(processConfig, processConfig.getStartNodeId());
+        while (currentProcessNode != null) {
+            if (currentProcessNode == null || processConfig.getEndNodeId().equals(currentProcessNode.getNodeId())) {
+                break;
+            }
+            currentProcessNode = getNodeById(processConfig, currentProcessNode.getNextNodeId());
+            if ("TEST".equals(currentProcessNode.getNodeType())) {
+                System.out.println(OBJECT_MAPPER.writeValueAsString(currentProcessNode));
+            }
         }
         ResponseResult reply = ResponseResult.success(requestCommon.getRequestId(),"消费者同步返回内容");
         return reply;
+    }
+
+    public ProcessNode getNodeById(ProcessConfig processConfig, String nodeId) {
+        if (StringUtils.isEmpty(nodeId) || processConfig == null || CollectionUtils.isEmpty(processConfig.getProcessNodes()) ) {
+            return null;
+        }
+        return processConfig.getProcessNodes().stream()
+                .filter(node -> nodeId.equals(node.getNodeId()))
+                .findFirst()
+                .orElse(null);
     }
 
     private static String processConfigJson1= """
@@ -39,23 +58,49 @@ public class ProcessEngine {
               "processNodes": [
                 {
                   "nodeId": "node1",
-                  "nodeName": "node1",
-                  "nodeType": "TEST",
-                  "nodeConfig": ""
+                  "nodeName": "开始节点",
+                  "nodeType": "START",
+                  "nodeConfig": "",
+                  "nextNodeId": "node2"
                 },
                 {
                   "nodeId": "node2",
                   "nodeName": "node2",
                   "nodeType": "TEST",
-                  "nodeConfig": ""
+                  "nodeConfig": "",
+                  "nextNodeId": "node3"
                 },
                 {
-                  "nodeId": "node2",
+                  "nodeId": "node3",
                   "nodeName": "node2",
                   "nodeType": "TEST",
-                  "nodeConfig": ""
+                  "nodeConfig": "",
+                  "nextNodeId": "node4"
+                },
+                {
+                  "nodeId": "node4",
+                  "nodeName": "node2",
+                  "nodeType": "TEST",
+                  "nodeConfig": "",
+                  "nextNodeId": "node5"
+                },
+                {
+                  "nodeId": "node5",
+                  "nodeName": "node2",
+                  "nodeType": "TEST",
+                  "nodeConfig": "",
+                  "nextNodeId": "node6"
+                },
+                {
+                  "nodeId": "node6",
+                  "nodeName": "结束节点",
+                  "nodeType": "END",
+                  "nodeConfig": "",
+                  "nextNodeId": ""
                 }
-              ]
+              ],
+              "startNodeId": "node1",
+              "endNodeId": "node6"
             }
             """;
 }
