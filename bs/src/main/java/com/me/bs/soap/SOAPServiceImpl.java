@@ -39,6 +39,7 @@ public class SOAPServiceImpl implements SOAPService {
             HttpServletRequest request = (HttpServletRequest) wsContext.getMessageContext().get(MessageContext.SERVLET_REQUEST);
             RequestCommon requestCommon = RequestUtil.extractRequestCommon(request, msg);
             requestCommon.setRequestType("soap");
+            requestCommon.setSyncType("sync");
             requestCommon.setRequestTopic(topic);
             String requestId = requestCommon.getRequestId();
             CompletableFuture<ResponseResult> responseFuture = RpcSyncContext.createRequest(requestId);
@@ -59,6 +60,7 @@ public class SOAPServiceImpl implements SOAPService {
             HttpServletRequest request = (HttpServletRequest) wsContext.getMessageContext().get(MessageContext.SERVLET_REQUEST);
             RequestCommon requestCommon = RequestUtil.extractRequestCommon(request, msg);
             requestCommon.setRequestType("soap");
+            requestCommon.setSyncType("async");
             requestCommon.setRequestTopic(topic);
             CompletableFuture<SendReceipt> future = rocketMQClientTemplate.asyncSendNormalMessage(topic, requestCommon, null);
             future.whenComplete((sendReceipt, throwable) -> {

@@ -71,6 +71,7 @@ public class HTTPController {
         try {
             RequestCommon requestCommon = RequestUtil.extractRequestCommon(request);
             requestCommon.setRequestType("http");
+            requestCommon.setSyncType("sync");
             requestCommon.setRequestTopic(topic);
             //创建RPC同步上下文，注册future用于接收消费者回调
             String requestId = requestCommon.getRequestId();
@@ -90,6 +91,7 @@ public class HTTPController {
         try {
             RequestCommon requestCommon = RequestUtil.extractRequestCommon(request);
             requestCommon.setRequestType("http");
+            requestCommon.setSyncType("async");
             requestCommon.setRequestTopic(topic);
             CompletableFuture<SendReceipt> future = rocketMQClientTemplate.asyncSendNormalMessage(topic, requestCommon, null);
             future.whenComplete((sendReceipt, throwable) -> {

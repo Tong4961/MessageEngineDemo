@@ -2,6 +2,7 @@ package com.me.bp.consumer;
 
 import com.me.bp.common.RequestCommon;
 import com.me.bp.common.ResponseResult;
+import com.me.bp.process.ProcessEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
@@ -35,6 +36,8 @@ import java.util.stream.Collectors;
 public class AllTopicConsumer implements DisposableBean {
     @Autowired
     private RocketMQClientTemplate rocketMQClientTemplate;
+    @Autowired
+    private ProcessEngine processEngine;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private PushConsumer pushConsumer;
     Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
@@ -71,9 +74,8 @@ public class AllTopicConsumer implements DisposableBean {
                             String body = StandardCharsets.UTF_8.decode(messageView.getBody()).toString();
                             RequestCommon requestCommon = OBJECT_MAPPER.readValue(body, RequestCommon.class);
                             System.out.println("收到消息: Topic=" + messageView.getTopic() + ", MessageId=" + messageView.getMessageId()+ ", MessageBody=" + requestCommon);
-                            if ("JH0001".equals(messageView.getTopic())) {
-                                ResponseResult reply = ResponseResult.success(requestCommon.getRequestId(),"消费者同步返回内容");
-                                Thread.sleep(3000);
+                            ResponseResult reply = processEngine.executeTest(messageView.getTopic(), requestCommon);
+                            if ("sync".equals(requestCommon.getSyncType())) {
                                 rocketMQClientTemplate.asyncSendNormalMessage("replyTopic", reply, null);
                                 log.info("同步消息响应已返回MQ topic={} , requestId={}", "replyTopic", requestCommon.getRequestId());
                             } else {
@@ -81,6 +83,7 @@ public class AllTopicConsumer implements DisposableBean {
                             }
                             return ConsumeResult.SUCCESS;
                         } catch (Exception e) {
+                            e.printStackTrace();
                             log.error("BP AllTopicConsumer topic={} err:{}", messageView.getTopic(), e.getMessage());
                             return ConsumeResult.FAILURE;
                         }

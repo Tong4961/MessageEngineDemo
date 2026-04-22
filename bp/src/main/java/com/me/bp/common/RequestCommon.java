@@ -25,6 +25,7 @@ public class RequestCommon {
     private String requestParams; //json格式
     private String requestBody;
     private String requestType; //http soap tcp socket
+    private String syncType;
     private String url;
     private String method;
     private String clientIp;
