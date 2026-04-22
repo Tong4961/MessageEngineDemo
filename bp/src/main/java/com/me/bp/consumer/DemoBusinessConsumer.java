@@ -79,23 +79,27 @@ public class DemoBusinessConsumer implements DisposableBean {
                             // 模拟业务处理
                             Thread.sleep(500);
 
-                            // 发送 reply 到 meDemo_reply topic
-                            ResponseResult reply = ResponseResult.builder()
-                                    .requestId(request.getRequestId())
-                                    .code(200)
-                                    .message("处理完成")
-                                    .data("reply from business consumer, messageId=" + messageView.getMessageId())
-                                    .timestamp(System.currentTimeMillis())
-                                    .build();
+                            // JH0001 同步消息，需要回复；其余 topic 异步处理不回复
+                            if ("JH0001".equals(messageView.getTopic())) {
+                                ResponseResult reply = ResponseResult.builder()
+                                        .requestId(request.getRequestId())
+                                        .code(200)
+                                        .message("处理完成")
+                                        .data("reply from business consumer, messageId=" + messageView.getMessageId())
+                                        .timestamp(System.currentTimeMillis())
+                                        .build();
 
-                            String replyBody = OBJECT_MAPPER.writeValueAsString(reply);
-                            Message replyMsg = provider.newMessageBuilder()
-                                    .setTopic(replyTopic)
-                                    .setBody(replyBody.getBytes(StandardCharsets.UTF_8))
-                                    .setTag("reply")
-                                    .build();
-                            this.producer.send(replyMsg);
-                            log.info("[模拟消费者] 已发送 reply: topic={}, requestId={}", replyTopic, request.getRequestId());
+                                String replyBody = OBJECT_MAPPER.writeValueAsString(reply);
+                                Message replyMsg = provider.newMessageBuilder()
+                                        .setTopic(replyTopic)
+                                        .setBody(replyBody.getBytes(StandardCharsets.UTF_8))
+                                        .setTag("reply")
+                                        .build();
+                                this.producer.send(replyMsg);
+                                log.info("[模拟消费者] JH0001 已发送 reply: topic={}, requestId={}", replyTopic, request.getRequestId());
+                            } else {
+                                log.info("[模拟消费者] 异步消息无需回复: topic={}, requestId={}", messageView.getTopic(), request.getRequestId());
+                            }
 
                             return ConsumeResult.SUCCESS;
                         } catch (Exception e) {
