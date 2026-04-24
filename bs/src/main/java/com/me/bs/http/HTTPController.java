@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @ClassName HTTPController
@@ -77,15 +79,22 @@ public class HTTPController {
             requestCommon.setRequestType("http");
             requestCommon.setSyncType("sync");
             requestCommon.setRequestTopic(topic);
-            //创建RPC同步上下文，注册future用于接收消费者回调
             String requestId = requestCommon.getRequestId();
-            CompletableFuture<ResponseResult> responseFuture = RpcSyncContext.createRequest(requestId);
             SendReceipt sendReceipt = rocketMQClientTemplate.syncSendNormalMessage(topic, requestCommon);
             log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
-            //等待消费者返回结果（RPC同步调用）
-            ResponseResult response = RpcSyncContext.getResponse(requestId);
-            //使用redisTemplate获取requestId的响应并返回
-            return response.toString();
+            // 使用redisTemplate从redis获取响应，超时1分钟
+            long startTime = System.currentTimeMillis();
+            long timeoutMs = 60000;
+            while (System.currentTimeMillis() - startTime < timeoutMs) {
+                Object reply = redisTemplate.opsForValue().get("reply:" + requestId);
+                if (reply != null) {
+                    log.info("从Redis获取响应成功, requestId={}", requestId);
+                    return reply.toString();
+                }
+                Thread.sleep(100);
+            }
+            log.warn("从Redis获取响应超时, requestId={}", requestId);
+            return ResponseResult.error("timeout").toString();
         } catch (Exception e) {
             log.error("syncMethod error: {}", e.getMessage());
             return ResponseResult.error(e.getMessage()).toString();

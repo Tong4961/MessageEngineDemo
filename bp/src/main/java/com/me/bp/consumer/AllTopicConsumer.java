@@ -79,8 +79,9 @@ public class AllTopicConsumer implements DisposableBean {
                             System.out.println("收到消息: Topic=" + messageView.getTopic() + ", MessageId=" + messageView.getMessageId()+ ", MessageBody=" + requestCommon);
                             ResponseResult reply = processEngine.executeTest(messageView.getTopic(), requestCommon);
                             if ("sync".equals(requestCommon.getSyncType())) {
+                                // 使用redis存储reply，key=reply.requestId
+                                redisTemplate.opsForValue().set("reply:" + reply.getRequestId(), reply);
                                 rocketMQClientTemplate.asyncSendNormalMessage("replyTopic", reply, null);
-                                //使用redisTemplate向redis存放reply key=reply.requestId
                                 log.info("同步消息响应已返回MQ topic={} , requestId={}", "replyTopic", requestCommon.getRequestId());
                             } else {
                                 log.info("异步消息无需回复: topic={}, requestId={}", messageView.getTopic(), requestCommon.getRequestId());
