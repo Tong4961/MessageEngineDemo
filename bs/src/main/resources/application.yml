@@ -34,12 +34,12 @@ mybatis-flex:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-logging:
-  level:
-    root: INFO
-
 rocketmq:
   producer:
     endpoints: 54.145.211.227:8080
   push-consumer:
      endpoints: 54.145.211.227:8080
+
+logging:
+  level:
+    root: INFO

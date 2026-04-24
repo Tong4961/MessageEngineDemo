@@ -45,6 +45,14 @@ public class ResponseResult {
                 .timestamp(System.currentTimeMillis())
                 .build();
     }
+    public static ResponseResult error(String requestId, String message) {
+        return ResponseResult.builder()
+                .code(500)
+                .requestId(requestId)
+                .message(message)
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(); //全局静态ObjectMapper 只创建一次性能好
 

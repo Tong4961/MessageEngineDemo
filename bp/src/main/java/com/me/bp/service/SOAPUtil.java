@@ -1,11 +1,11 @@
-package com.me.bp.util;
+package com.me.bp.service;
 
 /**
- * @ClassName HTTPUtil
+ * @ClassName SOAPUtil
  * @Description TODO
  * @Author Ming
  * @Date 2026/4/22 14:00
  * @Version 1.0
  */
-public class HTTPUtil {
+public class SOAPUtil {
 }

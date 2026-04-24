@@ -11,6 +11,8 @@ import org.apache.rocketmq.client.apis.consumer.FilterExpression;
 import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
 import org.apache.rocketmq.client.apis.consumer.PushConsumer;
 import org.apache.rocketmq.client.core.RocketMQClientTemplate;
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +41,8 @@ public class AllTopicConsumer implements DisposableBean {
     private RocketMQClientTemplate rocketMQClientTemplate;
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private RedissonClient redissonClient;
     @Autowired
     private ProcessEngine processEngine;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -79,8 +83,9 @@ public class AllTopicConsumer implements DisposableBean {
                             System.out.println("收到消息: Topic=" + messageView.getTopic() + ", MessageId=" + messageView.getMessageId()+ ", MessageBody=" + requestCommon);
                             ResponseResult reply = processEngine.executeTest(messageView.getTopic(), requestCommon);
                             if ("sync".equals(requestCommon.getSyncType())) {
-                                //后期使用redissonClient进行优化 弃用redisTemplate
-                                redisTemplate.opsForValue().set("reply:" + reply.getRequestId(), reply, 60, TimeUnit.SECONDS);
+                                RBlockingQueue<String> queue = redissonClient.getBlockingQueue("reply:" + reply.getRequestId());
+                                queue.add(reply.toString());
+                                redissonClient.getKeys().expire(queue.getName(), 60, TimeUnit.SECONDS);
                                 log.info("同步消息响应已存储Redis topic={} , requestId={}", "replyTopic", requestCommon.getRequestId());
                             } else {
                                 log.info("异步消息无需回复: topic={}, requestId={}", messageView.getTopic(), requestCommon.getRequestId());

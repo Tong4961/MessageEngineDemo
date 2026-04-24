@@ -10,12 +10,14 @@ import jakarta.xml.ws.handler.MessageContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.core.RocketMQClientTemplate;
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @ClassName SOAPServiceImpl
@@ -31,8 +33,10 @@ public class SOAPServiceImpl implements SOAPService {
     private WebServiceContext wsContext;
     @Autowired
     private RocketMQClientTemplate rocketMQClientTemplate;
+    //@Autowired
+    //private RedisTemplate<String, Object> redisTemplate;
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
@@ -46,20 +50,16 @@ public class SOAPServiceImpl implements SOAPService {
             String requestId = requestCommon.getRequestId();
             SendReceipt sendReceipt = rocketMQClientTemplate.syncSendNormalMessage(topic, requestCommon);
             log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
-            //后期使用redissonClient进行优化 弃用redisTemplate
-            long startTime = System.currentTimeMillis();
-            long timeoutMs = 60000;
-            while (System.currentTimeMillis() - startTime < timeoutMs) {
-                Object reply = redisTemplate.opsForValue().get("reply:" + requestId);
-                if (reply != null) {
-                    ResponseResult result = OBJECT_MAPPER.readValue((String) reply, ResponseResult.class);
-                    log.info("从Redis获取响应成功, requestId={}", requestId);
-                    return result.toString();
-                }
-                Thread.sleep(100);
+            RBlockingQueue<String> queue = redissonClient.getBlockingQueue("reply:" + requestId);
+            redissonClient.getKeys().expire(queue.getName(), 60+10, TimeUnit.SECONDS);
+            String replyJson = queue.poll(60, TimeUnit.SECONDS);
+            if (replyJson != null) {
+                ResponseResult result = OBJECT_MAPPER.readValue(replyJson, ResponseResult.class);
+                log.info("从Redis获取响应成功, requestId={}", requestId);
+                return result.toString();
             }
             log.warn("从Redis获取响应超时, requestId={}", requestId);
-            return ResponseResult.error("timeout").toString();
+            return ResponseResult.error(requestCommon.getRequestId(), "timeout").toString();
         } catch (Exception e) {
             log.error("syncMethod error: {}", e.getMessage());
             return ResponseResult.error(e.getMessage()).toString();
@@ -82,11 +82,11 @@ public class SOAPServiceImpl implements SOAPService {
                     System.out.println("send MQ success: Topic=" +topic + ", MessageId=" + requestCommon.getRequestId());
                 }
             });
+            return ResponseResult.success(requestCommon.getRequestId(), "").toString();
         } catch (Exception e) {
             log.error("asyncMethod error: {}", e.getMessage());
             return ResponseResult.error(e.getMessage()).toString();
         }
-        return ResponseResult.success("").toString();
     }
 
     @Override

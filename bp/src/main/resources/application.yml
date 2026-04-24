@@ -28,18 +28,18 @@ spring:
           min-idle: 0
           max-wait: -1ms
 
-  mybatis-flex:
-    mapper-locations: classpath:mapper/*.xml
-    configuration:
-      map-underscore-to-camel-case: true
-      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
-logging:
-  level:
-    root: INFO
+mybatis-flex:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 rocketmq:
   producer:
     endpoints: 54.145.211.227:8080
   push-consumer:
      endpoints: 54.145.211.227:8080
+
+logging:
+  level:
+    root: INFO

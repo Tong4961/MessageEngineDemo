@@ -1,4 +1,4 @@
-package com.me.bp.process;
+package com.me.bp.entity;
 
 import lombok.Data;
 import java.util.List;

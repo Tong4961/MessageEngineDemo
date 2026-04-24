@@ -1,5 +1,7 @@
 package com.me.bp.process;
 
+import com.me.bp.entity.ProcessConfig;
+import com.me.bp.entity.ProcessNode;
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
 import org.apache.cxf.common.util.CollectionUtils;
@@ -36,6 +38,12 @@ public class ProcessEngine {
             if ("TEST".equals(currentProcessNode.getNodeType())) {
                 System.out.println(OBJECT_MAPPER.writeValueAsString(currentProcessNode));
             }
+            if ("HTTP".equals(currentProcessNode.getNodeType())) {
+                System.out.println(OBJECT_MAPPER.writeValueAsString(currentProcessNode));
+            }
+            if ("SOAP".equals(currentProcessNode.getNodeType())) {
+                System.out.println(OBJECT_MAPPER.writeValueAsString(currentProcessNode));
+            }
         }
         ResponseResult reply = ResponseResult.success(requestCommon.getRequestId(),"消费者同步返回内容");
         return reply;
@@ -67,7 +75,7 @@ public class ProcessEngine {
                   "nodeId": "node2",
                   "nodeName": "node2",
                   "nodeType": "HTTP",
-                  "nodeConfig": "{\\"boId\\":\\"bo1\\",\\"uri\\":\\"/api/create\\",\\"method\\":\\"POST\\",\\"contentType\\":\\"application/json\\",\\"header\\":\\"\\",\\"payload\\":\\"context.requestbody\\"}",
+                  "nodeConfig": "{\\"boId\\":\\"bo1\\",\\"uri\\":\\"/api/create\\",\\"method\\":\\"POST\\",\\"contentType\\":\\"application/json\\",\\"invokeTypeType\\":\\"body\\",\\"header\\":\\"\\",\\"payload\\":\\"context.requestbody\\"}",
                   "nextNodeId": "node3"
                 },
                 {
