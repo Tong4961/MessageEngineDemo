@@ -66,15 +66,15 @@ public class ProcessEngine {
                 {
                   "nodeId": "node2",
                   "nodeName": "node2",
-                  "nodeType": "TEST",
-                  "nodeConfig": "",
+                  "nodeType": "HTTP",
+                  "nodeConfig": { "boId": "bo1", "uri": "/api/create", "method": "POST", "contentType": "application/json", "header": "", "payload": "context.requestbody" },
                   "nextNodeId": "node3"
                 },
                 {
                   "nodeId": "node3",
                   "nodeName": "node2",
-                  "nodeType": "TEST",
-                  "nodeConfig": "",
+                  "nodeType": "SOAP",
+                  "nodeConfig": { "boId": "bo2", "method": "methodName", "header": "", "param": "[param1,param2]",  "payload": "[context.payload1,context.payload2]", },
                   "nextNodeId": "node4"
                 },
                 {

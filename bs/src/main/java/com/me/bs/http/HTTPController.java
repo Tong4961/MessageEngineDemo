@@ -1,7 +1,7 @@
 package com.me.bs.http;
 
-import com.me.bs.util.RpcSyncContext;
 import com.me.bs.util.RequestUtil;
+import com.me.bs.util.RpcSyncContext;
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,8 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.core.RocketMQClientTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.ObjectMapper;
+
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -26,6 +28,8 @@ import java.util.concurrent.CompletableFuture;
 public class HTTPController {
     @Autowired
     private RocketMQClientTemplate rocketMQClientTemplate;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     /**
     *@author Ming
@@ -80,6 +84,7 @@ public class HTTPController {
             log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
             //等待消费者返回结果（RPC同步调用）
             ResponseResult response = RpcSyncContext.getResponse(requestId);
+            //使用redisTemplate获取requestId的响应并返回
             return response.toString();
         } catch (Exception e) {
             log.error("syncMethod error: {}", e.getMessage());

@@ -1,5 +1,4 @@
 server:
-  session-timeout: 1800
   port: 12001
   servlet:
     context-path: "/bs"
@@ -10,6 +9,30 @@ spring:
   threads:
     virtual:
       enabled: true
+  datasource:
+    url: jdbc:postgresql://54.145.211.227:5432/postgres
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: 54.145.211.227
+      port: 6379
+      password: 123456
+      database: 0
+      timeout: 6000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+mybatis-flex:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 logging:
   level:

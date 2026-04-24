@@ -1,8 +1,8 @@
 package com.me.bp.consumer;
 
+import com.me.bp.process.ProcessEngine;
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
-import com.me.bp.process.ProcessEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
@@ -10,14 +10,15 @@ import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.consumer.FilterExpression;
 import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
 import org.apache.rocketmq.client.apis.consumer.PushConsumer;
-import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.core.RocketMQClientTemplate;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,6 +37,8 @@ import java.util.stream.Collectors;
 public class AllTopicConsumer implements DisposableBean {
     @Autowired
     private RocketMQClientTemplate rocketMQClientTemplate;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private ProcessEngine processEngine;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -77,6 +80,7 @@ public class AllTopicConsumer implements DisposableBean {
                             ResponseResult reply = processEngine.executeTest(messageView.getTopic(), requestCommon);
                             if ("sync".equals(requestCommon.getSyncType())) {
                                 rocketMQClientTemplate.asyncSendNormalMessage("replyTopic", reply, null);
+                                //使用redisTemplate向redis存放reply key=reply.requestId
                                 log.info("同步消息响应已返回MQ topic={} , requestId={}", "replyTopic", requestCommon.getRequestId());
                             } else {
                                 log.info("异步消息无需回复: topic={}, requestId={}", messageView.getTopic(), requestCommon.getRequestId());

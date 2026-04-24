@@ -50,11 +50,31 @@
             <artifactId>rocketmq-client-java</artifactId>
             <version>5.2.0</version>
         </dependency>
+        <!--redis-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
         <!--cxf webservice-->
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-spring-boot-starter-jaxws</artifactId>
             <version>4.1.5</version>
+        </dependency>
+        <!--postgresql-->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mybatis-flex</groupId>
+            <artifactId>mybatis-flex-spring-boot4-starter</artifactId>
+            <version>1.11.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
     </dependencies>
     <dependencyManagement>
