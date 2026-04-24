@@ -2,6 +2,7 @@ package com.me.bp.process;
 
 import com.me.bp.entity.ProcessConfig;
 import com.me.bp.entity.ProcessNode;
+import com.me.bp.service.HTTPService;
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
 import org.apache.cxf.common.util.CollectionUtils;
@@ -19,6 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class ProcessEngine {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private HTTPService httpService;
     public ResponseResult executeTest(String topic, RequestCommon requestCommon){
         ProcessContext processContext = new ProcessContext();
         ProcessConfig processConfig = OBJECT_MAPPER.readValue(processConfigJson1, ProcessConfig.class);
@@ -39,10 +41,11 @@ public class ProcessEngine {
                 System.out.println(OBJECT_MAPPER.writeValueAsString(currentProcessNode));
             }
             if ("HTTP".equals(currentProcessNode.getNodeType())) {
-                System.out.println(OBJECT_MAPPER.writeValueAsString(currentProcessNode));
+                httpService.doHTTPInvoking(processContext, currentProcessNode);
+                System.out.println("doHTTPInvoking");
             }
             if ("SOAP".equals(currentProcessNode.getNodeType())) {
-                System.out.println(OBJECT_MAPPER.writeValueAsString(currentProcessNode));
+                System.out.println("doSOAPInvoking");
             }
         }
         ResponseResult reply = ResponseResult.success(requestCommon.getRequestId(),"消费者同步返回内容");
