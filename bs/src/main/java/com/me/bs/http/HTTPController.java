@@ -1,7 +1,6 @@
 package com.me.bs.http;
 
 import com.me.bs.util.RequestUtil;
-import com.me.bs.util.RpcSyncContext;
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.ObjectMapper;
-
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @ClassName HTTPController
@@ -82,14 +78,15 @@ public class HTTPController {
             String requestId = requestCommon.getRequestId();
             SendReceipt sendReceipt = rocketMQClientTemplate.syncSendNormalMessage(topic, requestCommon);
             log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
-            // 使用redisTemplate从redis获取响应，超时1分钟
+            //后期使用redissonClient进行优化 弃用redisTemplate
             long startTime = System.currentTimeMillis();
             long timeoutMs = 60000;
             while (System.currentTimeMillis() - startTime < timeoutMs) {
                 Object reply = redisTemplate.opsForValue().get("reply:" + requestId);
                 if (reply != null) {
+                    ResponseResult result = OBJECT_MAPPER.readValue((String) reply, ResponseResult.class);
                     log.info("从Redis获取响应成功, requestId={}", requestId);
-                    return reply.toString();
+                    return result.toString();
                 }
                 Thread.sleep(100);
             }

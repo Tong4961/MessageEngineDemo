@@ -1,9 +1,8 @@
 package com.me.bs.soap;
 
+import com.me.bs.util.RequestUtil;
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
-import com.me.bs.util.RpcSyncContext;
-import com.me.bs.util.RequestUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.ws.WebServiceContext;
@@ -12,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.core.RocketMQClientTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
@@ -31,6 +31,8 @@ public class SOAPServiceImpl implements SOAPService {
     private WebServiceContext wsContext;
     @Autowired
     private RocketMQClientTemplate rocketMQClientTemplate;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
@@ -42,12 +44,22 @@ public class SOAPServiceImpl implements SOAPService {
             requestCommon.setSyncType("sync");
             requestCommon.setRequestTopic(topic);
             String requestId = requestCommon.getRequestId();
-            CompletableFuture<ResponseResult> responseFuture = RpcSyncContext.createRequest(requestId);
             SendReceipt sendReceipt = rocketMQClientTemplate.syncSendNormalMessage(topic, requestCommon);
             log.info("消息已发送, topic={}, requestId={}, messageId={}", topic, requestId, sendReceipt.getMessageId());
-            //等待消费者返回结果（RPC同步调用）
-            ResponseResult response = RpcSyncContext.getResponse(requestId);
-            return OBJECT_MAPPER.writeValueAsString(response.getData());
+            //后期使用redissonClient进行优化 弃用redisTemplate
+            long startTime = System.currentTimeMillis();
+            long timeoutMs = 60000;
+            while (System.currentTimeMillis() - startTime < timeoutMs) {
+                Object reply = redisTemplate.opsForValue().get("reply:" + requestId);
+                if (reply != null) {
+                    ResponseResult result = OBJECT_MAPPER.readValue((String) reply, ResponseResult.class);
+                    log.info("从Redis获取响应成功, requestId={}", requestId);
+                    return result.toString();
+                }
+                Thread.sleep(100);
+            }
+            log.warn("从Redis获取响应超时, requestId={}", requestId);
+            return ResponseResult.error("timeout").toString();
         } catch (Exception e) {
             log.error("syncMethod error: {}", e.getMessage());
             return ResponseResult.error(e.getMessage()).toString();
