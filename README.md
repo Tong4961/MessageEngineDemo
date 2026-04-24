@@ -1,0 +1,152 @@
+# MessageEngineDemo
+
+Spring Boot 消息引擎网关，统一接收 HTTP / SOAP 请求，转发至 Apache RocketMQ，并支持 RPC 同步回调。
+
+## 技术栈
+
+- Spring Boot
+- Apache RocketMQ 5.x（Push Consumer）
+- Apache CXF（JAX-WS SOAP）
+- CompletableFuture（RPC 同步）
+
+## 模块结构
+
+```
+MessageEngineDemo/
+├── bs/                          # 业务服务层（网关）
+│   ├── BSApplication.java       # 启动入口
+│   ├── http/HTTPController.java # HTTP 接口（同步/异步）
+│   ├── soap/                    # SOAP 服务
+│   │   ├── SOAPService.java     # SOAP 接口定义
+│   │   └── SOAPServiceImpl.java # SOAP 接口实现
+│   ├── consumer/ReplyConsumer.java  # Reply Topic 消费者（唤醒 RPC 上下文）
+│   └── util/
+│       ├── RequestUtil.java     # HTTP 请求解析
+│       └── RpcSyncContext.java  # RPC 同步等待上下文
+│
+├── bp/                          # 消息消费层（流程处理）
+│   ├── BPApplication.java       # 启动入口
+│   ├── consumer/
+│   │   ├── AllTopicConsumer.java # 业务 Topic 消费者
+│   │   └── ConsumerRunner.java   # 消费者初始化启动器
+│   ├── process/
+│   │   ├── ProcessEngine.java   # 流程引擎
+│   │   ├── ProcessConfig.java   # 流程配置
+│   │   ├── ProcessContext.java  # 流程上下文
+│   │   └── ProcessNode.java     # 流程节点
+│   └── util/
+│       ├── GroovyUtil.java      # Groovy 脚本工具
+│       ├── HTTPUtil.java        # HTTP 请求工具
+│       ├── SOAPUtil.java        # SOAP 请求工具
+│       └── SQLUtil.java         # SQL 工具
+│
+└── common/                      # 公共组件
+    ├── RequestCommon.java       # 请求消息 POJO
+    └── ResponseResult.java      # RPC 响应 POJO
+```
+
+## 工作原理
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                         BS 模块（网关）                        │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐   │
+│  │ HTTP/SOAP   │───▶│ RocketMQ    │    │ ReplyConsumer   │   │
+│  │ Controller  │    │ Producer    │    │ (订阅 replyTopic)│   │
+│  └──────┬──────┘    └──────┬──────┘    └────────┬────────┘   │
+│         │                  │                     │            │
+│         │  RpcSyncContext  │                     │            │
+│         │  (CompletableFuture)◀──────────────────┘            │
+└─────────│──────────────────│─────────────────────────────────┘
+          │ MQ Topic         │ MQ Reply Topic
+          ▼                  ▼
+┌──────────────────────────────────────────────────────────────┐
+│                         BP 模块（消费者）                       │
+│  ┌─────────────────────┐    ┌─────────────────────────────┐  │
+│  │ AllTopicConsumer    │───▶│ ProcessEngine（流程引擎）     │  │
+│  │ (订阅业务 Topic)      │    │                             │  │
+│  └─────────────────────┘    └─────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+1. **HTTP/SOAP 请求接入**：BS 模块接收外部 HTTP/SOAP 请求
+2. **消息发送至 MQ**：请求被封装为 `RequestCommon`，发送至指定的业务 Topic
+3. **异步处理**：BP 模块的 `AllTopicConsumer` 消费消息，调用 `ProcessEngine` 处理
+4. **RPC 同步回调**：对于同步请求，消费者发送 Reply 消息到 `replyTopic`，`ReplyConsumer` 收到后唤醒 `RpcSyncContext`
+
+## 配置
+
+**端口**：12001，**上下文路径**：`/medemo`
+
+```yaml
+server:
+  port: 12001
+  servlet:
+    context-path: /medemo
+
+rocketmq:
+  producer:
+    endpoints: 54.145.211.227:8080
+  push-consumer:
+    endpoints: 54.145.211.227:8080
+```
+
+## 接口
+
+### HTTP
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/http/postsync/{topic}` | 同步发送消息，等待 Reply（超时 30s） |
+| POST | `/http/postasync/{topic}` | 异步发送消息，立即返回 |
+| GET | `/http/getsync/{topic}` | GET 同步 |
+| GET | `/http/getasync/{topic}` | GET 异步 |
+
+### SOAP
+
+| 路径 | 说明 |
+|------|------|
+| `/soap/service` | SOAP 消息服务（同步/异步） |
+
+## 消息格式
+
+### 请求消息（RequestCommon）
+
+```json
+{
+  "requestId": "唯一标识",
+  "requestType": "http/soap",
+  "syncType": "sync/async",
+  "requestTopic": "目标 Topic",
+  "data": {},
+  "timestamp": 1745200000000
+}
+```
+
+### 回复消息（ResponseResult）
+
+```json
+{
+  "requestId": "原始请求的 requestId",
+  "code": 200,
+  "message": "success",
+  "data": "业务结果数据",
+  "timestamp": 1745200000000
+}
+```
+
+## 流程引擎
+
+BP 模块内置流程引擎，支持配置化流程处理：
+
+- `ProcessConfig`：流程配置（包含节点列表、起始/结束节点）
+- `ProcessNode`：节点定义（nodeId、nodeType、nextNodeId）
+- `ProcessEngine`：流程执行器，遍历节点链
+
+内置节点类型：`START`、`TEST`、`END`
+
+## 运行
+
+```bash
+mvn spring-boot:run
+```
