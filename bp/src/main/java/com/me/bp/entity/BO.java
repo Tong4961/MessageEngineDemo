@@ -2,6 +2,7 @@ package com.me.bp.entity;
 
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
 import lombok.Data;
 
 /**
@@ -12,6 +13,7 @@ import lombok.Data;
  * @Version 1.0
  */
 @Data
+@Table("bo")
 public class BO {
     @Id(keyType = KeyType.Auto)
     private int id;

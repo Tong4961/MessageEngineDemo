@@ -2,9 +2,9 @@ package com.me.bp.service;
 
 import com.me.bp.entity.BO;
 import com.me.bp.entity.HTTPConfig;
+import com.me.bp.entity.ProcessNode;
 import com.me.bp.mapper.BOMapper;
 import com.me.bp.process.ProcessContext;
-import com.me.bp.entity.ProcessNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
@@ -17,12 +17,12 @@ import tools.jackson.databind.ObjectMapper;
  * @Version 1.0
  */
 @Service
-public class HTTPService {
+public class SOAPService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Autowired
     private BOMapper boMapper;
 
-    public void doHTTPInvoking(ProcessContext processContext, ProcessNode node){
+    public void doSOAPInvoking(ProcessContext processContext, ProcessNode node){
         HTTPConfig config = OBJECT_MAPPER.readValue(node.getNodeConfig(), HTTPConfig.class);
         BO bo = boMapper.selectOneById(config.getBoId());
     }
