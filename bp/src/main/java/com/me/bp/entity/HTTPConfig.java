@@ -13,6 +13,7 @@ import lombok.Data;
 public class HTTPConfig {
     private int boId;
     private String uri;
+    private String method;// GET/POST/PUT/DELETE
     private String contentType;// json/form/xml/txt
     private String invokeType;// body/form/param
     private String header;

@@ -2,6 +2,7 @@ package com.me.bp.process;
 
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -14,5 +15,5 @@ import java.util.Map;
 @Data
 public class ProcessContext {
     private String processId;
-    private Map<String, Object> variables;// 上下文变量
+    private Map<String, Object> variables = new HashMap<>();
 }
