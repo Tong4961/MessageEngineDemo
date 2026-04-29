@@ -6,6 +6,7 @@ import com.me.bp.service.HTTPService;
 import com.me.common.RequestCommon;
 import com.me.common.ResponseResult;
 import org.apache.cxf.common.util.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import tools.jackson.databind.ObjectMapper;
@@ -20,17 +21,19 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class ProcessEngine {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Autowired
     private HTTPService httpService;
+
     public ResponseResult executeTest(String topic, RequestCommon requestCommon){
         ProcessContext processContext = new ProcessContext();
         processContext.setRequest(requestCommon);
         ProcessConfig processConfig = OBJECT_MAPPER.readValue(processConfigJson1, ProcessConfig.class);
         if ("sync".equals(requestCommon.getSyncType())) {
-            try {
+            /*try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
-            }
+            }*/
         }
         String resp = "BP Result";
         ProcessNode currentProcessNode = getNodeById(processConfig, processConfig.getStartNodeId());
@@ -83,32 +86,46 @@ public class ProcessEngine {
                   "nodeId": "node2",
                   "nodeName": "node2",
                   "nodeType": "HTTP",
-                  "nodeConfig": "{\\"boId\\":\\"bo1\\",\\"uri\\":\\"/api/create\\",\\"method\\":\\"POST\\",\\"contentType\\":\\"application/json\\",\\"paramLocation\\":\\"body\\",\\"headerExpression\\":\\"\\",\\"payloadExpression\\":\\"context.requestbody\\"}",
+                  "nodeConfig": "{\\"boId\\":\\"2\\",\\"uri\\":\\"/api/create\\",\\"method\\":\\"POST\\",\\"contentType\\":\\"application/json\\",\\"paramLocation\\":\\"body\\",\\"headerExpression\\":\\"\\",\\"payloadExpression\\":\\"request.requestBody\\",\\"responseExpression\\":\\"context.resp1\\"}",
                   "nextNodeId": "node3"
                 },
                 {
                   "nodeId": "node3",
-                  "nodeName": "node2",
-                  "nodeType": "SOAP",
-                  "nodeConfig": "{\\"boId\\":\\"bo2\\",\\"method\\":\\"methodName\\",\\"headerExpression\\":\\"\\",\\"param\\":\\"[param1,param2]\\",\\"payloadExpression\\":\\"[context.payload1,context.payload2]\\"}",
+                  "nodeName": "node3",
+                  "nodeType": "HTTP",
+                  "nodeConfig": "{\\"boId\\":\\"2\\",\\"uri\\":\\"/api/update\\",\\"method\\":\\"POST\\",\\"contentType\\":\\"application/json\\",\\"paramLocation\\":\\"form\\",\\"headerExpression\\":\\"\\",\\"payloadExpression\\":\\"request.requestParams\\",\\"responseExpression\\":\\"context.resp1\\"}",
                   "nextNodeId": "node4"
                 },
                 {
                   "nodeId": "node4",
-                  "nodeName": "node2",
-                  "nodeType": "TEST",
-                  "nodeConfig": "",
+                  "nodeName": "node4",
+                  "nodeType": "HTTP",
+                  "nodeConfig": "{\\"boId\\":\\"2\\",\\"uri\\":\\"/api/query\\",\\"method\\":\\"GET\\",\\"contentType\\":\\"application/json\\",\\"paramLocation\\":\\"param\\",\\"headerExpression\\":\\"\\",\\"payloadExpression\\":\\"request.queryString\\",\\"responseExpression\\":\\"response\\"}",
                   "nextNodeId": "node5"
                 },
                 {
                   "nodeId": "node5",
-                  "nodeName": "node2",
-                  "nodeType": "TEST",
-                  "nodeConfig": "",
+                  "nodeName": "node5",
+                  "nodeType": "SOAP",
+                  "nodeConfig": "{\\"boId\\":\\"3\\",\\"method\\":\\"methodName\\",\\"headerExpression\\":\\"\\",\\"param\\":\\"[param1,param2]\\",\\"payloadExpression\\":\\"[context.payload1,context.payload2]\\"}",
                   "nextNodeId": "node6"
                 },
                 {
                   "nodeId": "node6",
+                  "nodeName": "node6",
+                  "nodeType": "TEST",
+                  "nodeConfig": "",
+                  "nextNodeId": "node7"
+                },
+                {
+                  "nodeId": "node7",
+                  "nodeName": "node7",
+                  "nodeType": "TEST",
+                  "nodeConfig": "",
+                  "nextNodeId": "node8"
+                },
+                {
+                  "nodeId": "node8",
                   "nodeName": "结束节点",
                   "nodeType": "END",
                   "nodeConfig": "",
@@ -116,7 +133,7 @@ public class ProcessEngine {
                 }
               ],
               "startNodeId": "node1",
-              "endNodeId": "node6"
+              "endNodeId": "node8"
             }
             """;
 }

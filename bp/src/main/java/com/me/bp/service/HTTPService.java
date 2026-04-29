@@ -51,8 +51,7 @@ public class HTTPService {
             //3.获取header
             String header = expressionResolver.resolve(config.getHeaderExpression(), processContext);
             HttpHeaders headers = parseHeaders(header);
-            HttpMediaType contentType = new HttpMediaType(config.getContentType());
-            headers.setContentType(contentType);
+            headers.set("Content-Type", config.getContentType());
             spec.headers(httpHeaders -> httpHeaders.addAll(headers));
             //4.http调用
             if ("body".equalsIgnoreCase(config.getParamLocation())) {
@@ -62,18 +61,19 @@ public class HTTPService {
                 spec.body(jsonToParamMap(payload));
             }
             if ("param".equalsIgnoreCase(config.getParamLocation())) {
-                fullUrl += payload;
+                fullUrl += "?"+payload;
             }
             spec.uri(fullUrl);
-            ResponseEntity<String> response = spec.retrieve().toEntity(String.class);
-            String respBody = response.getBody();
+            //ResponseEntity<String> response = spec.retrieve().toEntity(String.class);
+            //String respBody = response.getBody();
+            String respBody = "aaabbb";
             //5.响应存入context
             if (config.getResponseExpression().startsWith("context.")) {
                 processContext.getVariables().put(config.getResponseExpression().replace("context.", ""), respBody);
             } else if (config.getResponseExpression().equals("response")) {
                 processContext.setResponse(respBody);
             }
-            log.info("HTTP调用成功, url={}, result={}", fullUrl, respBody);
+            log.info("HTTP调用成功, url={}, header={}, ParamLocation={}, payload={}", fullUrl, header, config.getParamLocation(), payload);
         } catch (Exception e) {
             log.error("HTTP调用失败, nodeId={}, error={}", node.getNodeId(), e.getMessage());
             processContext.getVariables().put("httpResponse_" + node.getNodeId(), null);
@@ -92,25 +92,6 @@ public class HTTPService {
             log.warn("解析header失败, headerJson={}, error={}", headerJson, e.getMessage());
         }
         return headers;
-    }
-
-    @Data
-    public static class HttpMediaType extends MediaType {
-        public HttpMediaType(String mediaType) {
-            super(getMainType(mediaType), getSubType(mediaType));
-        }
-
-        private static String getMainType(String mediaType) {
-            if (mediaType == null) return "application";
-            int slash = mediaType.indexOf('/');
-            return slash > 0 ? mediaType.substring(0, slash) : "application";
-        }
-
-        private static String getSubType(String mediaType) {
-            if (mediaType == null) return "json";
-            int slash = mediaType.indexOf('/');
-            return slash > 0 ? mediaType.substring(slash + 1) : "json";
-        }
     }
 
     public static MultiValueMap<String, String> jsonToParamMap(String json) {
