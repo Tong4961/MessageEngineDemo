@@ -12,7 +12,7 @@ import tools.jackson.databind.ObjectMapper;
 
 /**
  * @ClassName ProcessEngine
- * @Description TODO
+ * @Description 流程引擎核心
  * @Author Ming
  * @Date 2026/4/22 14:19
  * @Version 1.0
@@ -23,6 +23,7 @@ public class ProcessEngine {
     private HTTPService httpService;
     public ResponseResult executeTest(String topic, RequestCommon requestCommon){
         ProcessContext processContext = new ProcessContext();
+        processContext.setRequest(requestCommon);
         ProcessConfig processConfig = OBJECT_MAPPER.readValue(processConfigJson1, ProcessConfig.class);
         if ("sync".equals(requestCommon.getSyncType())) {
             try {
@@ -31,9 +32,13 @@ public class ProcessEngine {
                 throw new RuntimeException(e);
             }
         }
+        String resp = "BP Result";
         ProcessNode currentProcessNode = getNodeById(processConfig, processConfig.getStartNodeId());
         while (currentProcessNode != null) {
             if (currentProcessNode == null || processConfig.getEndNodeId().equals(currentProcessNode.getNodeId())) {
+                if (!StringUtils.isEmpty(processContext.getResponse())) {
+                    resp =  processContext.getResponse();
+                }
                 break;
             }
             currentProcessNode = getNodeById(processConfig, currentProcessNode.getNextNodeId());
@@ -48,7 +53,7 @@ public class ProcessEngine {
                 System.out.println("doSOAPInvoking");
             }
         }
-        ResponseResult reply = ResponseResult.success(requestCommon.getRequestId(),"消费者同步返回内容");
+        ResponseResult reply = ResponseResult.success(requestCommon.getRequestId(),resp);
         return reply;
     }
 
@@ -78,14 +83,14 @@ public class ProcessEngine {
                   "nodeId": "node2",
                   "nodeName": "node2",
                   "nodeType": "HTTP",
-                  "nodeConfig": "{\\"boId\\":\\"bo1\\",\\"uri\\":\\"/api/create\\",\\"method\\":\\"POST\\",\\"contentType\\":\\"application/json\\",\\"invokeTypeType\\":\\"body\\",\\"header\\":\\"\\",\\"payload\\":\\"context.requestbody\\"}",
+                  "nodeConfig": "{\\"boId\\":\\"bo1\\",\\"uri\\":\\"/api/create\\",\\"method\\":\\"POST\\",\\"contentType\\":\\"application/json\\",\\"paramLocation\\":\\"body\\",\\"headerExpression\\":\\"\\",\\"payloadExpression\\":\\"context.requestbody\\"}",
                   "nextNodeId": "node3"
                 },
                 {
                   "nodeId": "node3",
                   "nodeName": "node2",
                   "nodeType": "SOAP",
-                  "nodeConfig": "{\\"boId\\":\\"bo2\\",\\"method\\":\\"methodName\\",\\"header\\":\\"\\",\\"param\\":\\"[param1,param2]\\",\\"payload\\":\\"[context.payload1,context.payload2]\\"}",
+                  "nodeConfig": "{\\"boId\\":\\"bo2\\",\\"method\\":\\"methodName\\",\\"headerExpression\\":\\"\\",\\"param\\":\\"[param1,param2]\\",\\"payloadExpression\\":\\"[context.payload1,context.payload2]\\"}",
                   "nextNodeId": "node4"
                 },
                 {

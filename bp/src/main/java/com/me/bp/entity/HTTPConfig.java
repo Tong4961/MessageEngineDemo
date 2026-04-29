@@ -15,7 +15,8 @@ public class HTTPConfig {
     private String uri;
     private String method;// GET/POST/PUT/DELETE
     private String contentType;// json/form/xml/txt
-    private String invokeType;// body/form/param
-    private String header;
-    private String payload;
+    private String paramLocation;// body/form/param
+    private String headerExpression;// context.header
+    private String payloadExpression;// context.jsonstr/request.requestBody/request.requestParams/request.queryString
+    private String responseExpression;// context.rep/response
 }

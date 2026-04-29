@@ -1,5 +1,6 @@
 package com.me.bp.process;
 
+import com.me.common.RequestCommon;
 import lombok.Data;
 
 import java.util.HashMap;
@@ -7,7 +8,7 @@ import java.util.Map;
 
 /**
  * @ClassName ProcessContext
- * @Description TODO
+ * @Description 流程上下文
  * @Author Ming
  * @Date 2026/4/22 14:22
  * @Version 1.0
@@ -15,5 +16,7 @@ import java.util.Map;
 @Data
 public class ProcessContext {
     private String processId;
-    private Map<String, Object> variables = new HashMap<>();
+    private Map<String, String> variables = new HashMap<>();
+    private RequestCommon request;
+    private String response;
 }

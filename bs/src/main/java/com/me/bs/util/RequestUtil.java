@@ -32,6 +32,8 @@ public class RequestUtil {
                 .requestId(UUID.randomUUID().toString())
                 .method(request.getMethod())
                 .url(getFullURL(request))
+                .uri(request.getRequestURI())
+                .queryString(request.getQueryString())
                 .clientIp(getClientIp(request))
                 .createTime(LocalDateTime.now().format(FORMATTER))
                 .build();
@@ -49,23 +51,8 @@ public class RequestUtil {
     }
 
     public static RequestCommon extractRequestCommon(HttpServletRequest request, String body){
-        RequestCommon requestCommon = RequestCommon.builder()
-                .requestId(UUID.randomUUID().toString())
-                .method(request.getMethod())
-                .url(getFullURL(request))
-                .clientIp(getClientIp(request))
-                .createTime(LocalDateTime.now().format(FORMATTER))
-                .build();
-        try {
-            requestCommon.setRequestHeaders(getHeadersJson(request));
-            requestCommon.setRequestParams(getParamsJson(request));
-            requestCommon.setRequestBody(body);
-        } catch (Exception e) {
-            log.error("get request info error: {}", e.getMessage());
-            requestCommon.setRequestStatus("error");
-            return requestCommon;
-        }
-        requestCommon.setRequestStatus("success");
+        RequestCommon requestCommon = extractRequestCommon(request);
+        requestCommon.setRequestBody(body);
         return requestCommon;
     }
 

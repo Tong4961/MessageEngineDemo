@@ -27,6 +27,8 @@ public class RequestCommon {
     private String requestType; //http soap tcp socket
     private String syncType;
     private String url;
+    private String uri;
+    private String queryString ;
     private String method;
     private String clientIp;
     private String createTime;
