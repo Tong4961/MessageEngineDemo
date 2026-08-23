@@ -10,15 +10,15 @@ spring:
     virtual:
       enabled: true
   datasource:
-    url: jdbc:postgresql://54.145.211.227:5432/postgres
+    url: jdbc:postgresql://ip:port/postgres
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
   data:
     redis:
-      host: 54.145.211.227
-      port: 6379
-      password: 123456
+      host: ip
+      port: port
+      password: password
       database: 0
       timeout: 6000ms
       lettuce:
@@ -36,9 +36,9 @@ mybatis-flex:
 
 rocketmq:
   producer:
-    endpoints: 54.145.211.227:8080
+    endpoints: ip:port
   push-consumer:
-     endpoints: 54.145.211.227:8080
+     endpoints: ip:port
 
 logging:
   level:
